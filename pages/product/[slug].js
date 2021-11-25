@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import NextLink from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/router';
 import {
   Link,
   Grid,
@@ -11,21 +10,29 @@ import {
   Card,
   Button,
 } from '@material-ui/core';
-
+import axios from 'axios';
 import Layout from '../../components/Layout';
-import data from '../../utils/data';
+import db from '../../utils/db';
+import Product from '../../models/Product';
 import useStyles from '../../utils/styles';
+import { Store } from '../../utils/Store';
 
-export default function ProductDetails() {
-  const router = useRouter();
-  const { slug } = router.query;
+export default function ProductDetails({ product }) {
+  const { dispatch } = useContext(Store);
+
   const classes = useStyles();
-  const product = data.products.find((el) => el.slug === slug);
 
   if (!product) {
     return <div>Product Not Found</div>;
   }
-
+  const addToCartHandler = async () => {
+    const { data } = await axios.get(`/api/products/${product._id}`);
+    if (data.countInStock <= 0) {
+      window.alert('Sorry. Product is out of stock');
+      return;
+    }
+    dispatch({ type: 'CART_ADD_ITEM', payload: { ...product, quantity: 1 } });
+  };
   return (
     <Layout title={product.name} description={product.description}>
       <div className={classes.section}>
@@ -98,7 +105,7 @@ export default function ProductDetails() {
                   fullWidth
                   variant="contained"
                   color="primary"
-                  type="button"
+                  onClick={addToCartHandler}
                 >
                   Add to cart
                 </Button>
@@ -110,3 +117,15 @@ export default function ProductDetails() {
     </Layout>
   );
 }
+export const getServerSideProps = async (ctx) => {
+  const { params } = ctx;
+  const { slug } = params;
+  await db.connect();
+  const product = await Product.findOne({ slug }).lean();
+  await db.disconnect();
+  return {
+    props: {
+      product: db.convertDocToObject(product),
+    },
+  };
+};
