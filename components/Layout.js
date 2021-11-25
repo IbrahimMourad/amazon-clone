@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import Head from 'next/head';
 import NextLink from 'next/link';
-
 import {
   AppBar,
   Toolbar,
@@ -11,9 +10,11 @@ import {
   createTheme,
   ThemeProvider,
   CssBaseline,
+  Switch,
 } from '@material-ui/core';
 import useStyles from '../utils/styles';
 import { Store } from '../utils/Store';
+import Cookies from 'js-cookie';
 
 export default function Layout({ title, description, children }) {
   const { state, dispatch } = useContext(Store);
@@ -37,18 +38,23 @@ export default function Layout({ title, description, children }) {
         main: '#f0c000',
       },
       secondary: {
-        main: '#008080',
+        main: '#208080',
       },
     },
   });
   const classes = useStyles();
+  const darkModeChangeHandler = () => {
+    dispatch({ type: darkMode ? 'DARK_MODE_OFF' : 'DARK_MODE_ON' });
+    const newDarkMode = !darkMode;
+    Cookies.set('darkMode', newDarkMode ? 'ON' : 'OFF');
+  };
   return (
     <div>
       <Head>
         <title>
-          {title ? `${title} - Next E-commerce` : 'Next E-commerce'}
+          {title ? `${title} - Next E-Commerce` : 'Next E-Commerce'}
         </title>
-        {description && <meta name="description" content={description} />}
+        {description && <meta name="description" content={description}></meta>}
       </Head>
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -56,11 +62,15 @@ export default function Layout({ title, description, children }) {
           <Toolbar>
             <NextLink href="/" passHref>
               <Link>
-                <Typography className={classes.brand}>Next</Typography>
+                <Typography className={classes.brand}>Next Ecom.</Typography>
               </Link>
             </NextLink>
             <div className={classes.grow}></div>
             <div>
+              <Switch
+                checked={darkMode}
+                onChange={darkModeChangeHandler}
+              ></Switch>
               <NextLink href="/cart" passHref>
                 <Link>Cart</Link>
               </NextLink>
@@ -72,7 +82,7 @@ export default function Layout({ title, description, children }) {
         </AppBar>
         <Container className={classes.main}>{children}</Container>
         <footer className={classes.footer}>
-          <Typography>All rights reserved. Next E-Commerce.</Typography>
+          <Typography>All rights reserved. Next Ecom.</Typography>
         </footer>
       </ThemeProvider>
     </div>
