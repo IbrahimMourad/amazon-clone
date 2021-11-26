@@ -15,11 +15,12 @@ import Layout from '../../components/Layout';
 import db from '../../utils/db';
 import Product from '../../models/Product';
 import useStyles from '../../utils/styles';
+import { useRouter } from 'next/router';
 import { Store } from '../../utils/Store';
 
 export default function ProductDetails({ product }) {
   const { dispatch } = useContext(Store);
-
+  const router = useRouter();
   const classes = useStyles();
 
   if (!product) {
@@ -32,6 +33,7 @@ export default function ProductDetails({ product }) {
       return;
     }
     dispatch({ type: 'CART_ADD_ITEM', payload: { ...product, quantity: 1 } });
+    router.push('/cart');
   };
   return (
     <Layout title={product.name} description={product.description}>
