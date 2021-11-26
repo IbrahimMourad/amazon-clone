@@ -1,17 +1,31 @@
-import React, { useState } from 'react';
-import NextLink from 'next/link';
 import {
-  Button,
-  Link,
   List,
   ListItem,
-  TextField,
   Typography,
+  TextField,
+  Button,
+  Link,
 } from '@material-ui/core';
 import axios from 'axios';
+import { useRouter } from 'next/router';
+import NextLink from 'next/link';
+import React, { useContext, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
+import { Store } from '../utils/Store';
 import useStyles from '../utils/styles';
+import Cookies from 'js-cookie';
+
 export default function Login() {
+  const router = useRouter();
+  const { redirect } = router.query; // login?redirect=/shipping
+  const { state, dispatch } = useContext(Store);
+  const { userInfo } = state;
+  useEffect(() => {
+    if (userInfo) {
+      router.push('/');
+    }
+  }, []);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const classes = useStyles();
@@ -22,7 +36,9 @@ export default function Login() {
         email,
         password,
       });
-      alert('success login');
+      dispatch({ type: 'USER_LOGIN', payload: data });
+      Cookies.set('userInfo', data);
+      router.push(redirect || '/');
     } catch (err) {
       alert(err.response.data ? err.response.data.message : err.message);
     }
@@ -41,7 +57,6 @@ export default function Login() {
               id="email"
               label="Email"
               inputProps={{ type: 'email' }}
-              value={email}
               onChange={(e) => setEmail(e.target.value)}
             ></TextField>
           </ListItem>
@@ -52,7 +67,6 @@ export default function Login() {
               id="password"
               label="Password"
               inputProps={{ type: 'password' }}
-              value={password}
               onChange={(e) => setPassword(e.target.value)}
             ></TextField>
           </ListItem>
@@ -62,7 +76,7 @@ export default function Login() {
             </Button>
           </ListItem>
           <ListItem>
-            Don't have an account?&nbsp;
+            Don't have an account? &nbsp;
             <NextLink href="/register" passHref>
               <Link>Register</Link>
             </NextLink>
