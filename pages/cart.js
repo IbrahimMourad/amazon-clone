@@ -19,12 +19,13 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-
+import { useRouter } from 'next/router';
 import { Store } from '../utils/Store';
 import Layout from '../components/Layout';
 import axios from 'axios';
 
 const CartScreen = () => {
+  const router = useRouter();
   const { state, dispatch } = useContext(Store);
   const {
     cart: { cartItems },
@@ -43,6 +44,9 @@ const CartScreen = () => {
     dispatch({ type: 'CART_REMOVE_ITEM', payload: item });
   };
 
+  const checkoutHandler = () => {
+    router.push('/shipping');
+  };
   return (
     <Layout title="Shopping Cart">
       <Typography component="h1" variant="h1">
@@ -134,7 +138,12 @@ const CartScreen = () => {
                   </Typography>
                 </ListItem>
                 <ListItem>
-                  <Button variant="contained" color="primary" fullWidth>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={checkoutHandler}
+                    fullWidth
+                  >
                     Check Out
                   </Button>
                 </ListItem>
