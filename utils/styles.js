@@ -18,7 +18,10 @@ const useStyles = makeStyles({
   },
   footer: { marginTop: 10, textAlign: 'center' },
   //
-  section: { marginTop: 10, marginBottom: 10 },
+  section: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
   form: {
     maxWidth: 800,
     margin: '0 auto',
