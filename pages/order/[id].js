@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useReducer } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Layout from '../../components/Layout';
 import { Store } from '../../utils/Store';
@@ -24,7 +24,7 @@ import { useRouter } from 'next/router';
 import useStyles from '../../utils/styles';
 import { useSnackbar } from 'notistack';
 import { getError } from '../../utils/error';
-import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
+import { PayPalButton } from 'react-paypal-button-v2';
 
 function reducer(state, action) {
   switch (action.type) {
@@ -49,11 +49,29 @@ function reducer(state, action) {
 
 function Order({ params }) {
   const orderId = params.id;
-  const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
   const classes = useStyles();
   const router = useRouter();
   const { state } = useContext(Store);
   const { userInfo } = state;
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const addPayPalScript = () => {
+    if (window.paypal) {
+      setScriptLoaded(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.PAYPAL_CLIENT_ID}`;
+    script.type = 'text/javascript';
+    script.async = true;
+    script.onload = () => setScriptLoaded(true);
+
+    document.body.appendChild(script);
+  };
+
+  // ComponentDidMount
+  useEffect(() => {
+    addPayPalScript();
+  }, []);
 
   const [{ loading, error, order, successPay }, dispatch] = useReducer(
     reducer,
@@ -97,58 +115,29 @@ function Order({ params }) {
       if (successPay) {
         dispatch({ type: 'PAY_RESET' });
       }
-    } else {
-      const loadPaypalScript = async () => {
-        const { data: clientId } = await axios.get('/api/keys/paypal', {
-          headers: { authorization: `Bearer ${userInfo.token}` },
-        });
-        paypalDispatch({
-          type: 'resetOptions',
-          value: {
-            'client-id': clientId,
-            currency: 'USD',
-          },
-        });
-        paypalDispatch({ type: 'setLoadingStatus', value: 'pending' });
-      };
-      loadPaypalScript();
     }
   }, [order, successPay]);
+
   const { closeSnackbar, enqueueSnackbar } = useSnackbar();
 
-  function createOrder(data, actions) {
-    return actions.order
-      .create({
-        purchase_units: [
-          {
-            amount: { value: totalPrice },
-          },
-        ],
-      })
-      .then((orderID) => {
-        return orderID;
-      });
-  }
-  function onApprove(data, actions) {
-    return actions.order.capture().then(async function (details) {
-      try {
-        dispatch({ type: 'PAY_REQUEST' });
-        const { data } = await axios.put(
-          `/api/orders/${order._id}/pay`,
-          details,
-          {
-            headers: { authorization: `Bearer ${userInfo.token}` },
-          }
-        );
-        dispatch({ type: 'PAY_SUCCESS', payload: data });
-        enqueueSnackbar('Order is paid', { variant: 'success' });
-      } catch (err) {
-        dispatch({ type: 'PAY_FAIL', payload: getError(err) });
-        enqueueSnackbar(getError(err), { variant: 'error' });
-      }
-    });
-  }
+  async function onSuccess(details, data) {
+    try {
+      dispatch({ type: 'PAY_REQUEST' });
+      const { data } = await axios.put(
+        `/api/orders/${order._id}/pay`,
+        details,
+        {
+          headers: { authorization: `Bearer ${userInfo.token}` },
+        }
+      );
+      dispatch({ type: 'PAY_SUCCESS', payload: data });
 
+      enqueueSnackbar('Order is paid', { variant: 'success' });
+    } catch (err) {
+      dispatch({ type: 'PAY_FAIL', payload: getError(err) });
+      enqueueSnackbar(getError(err), { variant: 'error' });
+    }
+  }
   function onError(err) {
     enqueueSnackbar(getError(err), { variant: 'error' });
   }
@@ -194,7 +183,10 @@ function Order({ params }) {
                 </ListItem>
                 <ListItem>{paymentMethod}</ListItem>
                 <ListItem>
-                  Status: {isPaid ? `paid at ${paidAt}` : 'not paid'}
+                  Status:{' '}
+                  {isPaid
+                    ? `paid at ${paidAt.toLocaleString('en-US')}`
+                    : 'not paid'}
                 </ListItem>
               </List>
             </Card>
@@ -306,15 +298,15 @@ function Order({ params }) {
                 </ListItem>
                 {!isPaid && (
                   <ListItem>
-                    {isPending ? (
+                    {!scriptLoaded ? (
                       <CircularProgress />
                     ) : (
                       <div className={classes.fullWidth}>
-                        <PayPalButtons
-                          createOrder={createOrder}
-                          onApprove={onApprove}
+                        <PayPalButton
+                          amount={totalPrice}
+                          onSuccess={onSuccess}
                           onError={onError}
-                        ></PayPalButtons>
+                        />
                       </div>
                     )}
                   </ListItem>
