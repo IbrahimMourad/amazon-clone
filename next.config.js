@@ -1,8 +1,7 @@
 module.exports = {
   reactStrictMode: true,
   env: {
-    PAYPAL_CLIENT_ID:
-      'AfIpFjK7IsxubLrrvPnfpq0zUleGzsNWSJsQ-CSTIyviAzaa7_EOwKIxVv7NOVt40rIgSG4IMd3rEZK8',
+    PAYPAL_CLIENT_ID: // your paypal id here
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
