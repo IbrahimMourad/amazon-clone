@@ -92,7 +92,7 @@ const AddProduct = () => {
         autoComplete="off"
       >
         <Typography component="h1" variant="h1">
-          Shipping Address
+          Add product to store
         </Typography>
         <div style={{ padding: '0 14px' }}>
           {/* Grid Container Start*/}
