@@ -16,6 +16,7 @@ import {
   Menu,
   MenuItem,
 } from '@material-ui/core';
+
 import Loading from './Loading';
 import useStyles from '../utils/styles';
 import { Store } from '../utils/Store';
@@ -55,6 +56,7 @@ export default function Layout({ title, description, children }) {
     const newDarkMode = !darkMode;
     Cookies.set('darkMode', newDarkMode ? 'ON' : 'OFF');
   };
+
   const [anchorEl, setAnchorEl] = useState(null);
   const loginClickHandler = (e) => {
     setAnchorEl(e.currentTarget);
@@ -66,11 +68,11 @@ export default function Layout({ title, description, children }) {
     }
   };
   const logoutClickHandler = () => {
-    setAnchorEl(null);
     dispatch({ type: 'USER_LOGOUT' });
     Cookies.remove('userInfo');
     Cookies.remove('cartItems');
     router.push('/');
+    setAnchorEl(null);
   };
 
   // state for Loading Screen
@@ -129,6 +131,13 @@ export default function Layout({ title, description, children }) {
                     checked={darkMode}
                     onChange={darkModeChangeHandler}
                   ></Switch>
+
+                  {userInfo?.isAdmin ? (
+                    <NextLink href="/admin/add" passHref>
+                      <Link>Add Item</Link>
+                    </NextLink>
+                  ) : null}
+
                   <NextLink href="/cart" passHref>
                     <Link>
                       {cart.cartItems.length > 0 ? (
@@ -143,6 +152,7 @@ export default function Layout({ title, description, children }) {
                       )}
                     </Link>
                   </NextLink>
+
                   {userInfo ? (
                     <>
                       <Button
@@ -158,7 +168,7 @@ export default function Layout({ title, description, children }) {
                         anchorEl={anchorEl}
                         keepMounted
                         open={Boolean(anchorEl)}
-                        onClose={loginMenuCloseHandler}
+                        onClose={() => setAnchorEl(null)}
                       >
                         <MenuItem
                           onClick={(e) => loginMenuCloseHandler(e, '/profile')}
